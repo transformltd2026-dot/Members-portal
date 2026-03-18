@@ -7,12 +7,12 @@
   "theme_color": "#008136",
   "icons": [
     {
-      "src": "https://via.placeholder.com/192",
+      "src": "https://drive.google.com/thumbnail?id=1eBPVAmgM5m8PI0m-vOz4A5Msftlnx-7F&sz=s192",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://via.placeholder.com/512",
+      "src": "https://drive.google.com/thumbnail?id=1eBPVAmgM5m8PI0m-vOz4A5Msftlnx-7F&sz=s512",
       "sizes": "512x512",
       "type": "image/png"
     }
