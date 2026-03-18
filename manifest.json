@@ -3,8 +3,8 @@
   "short_name": "TMC",
   "start_url": "index.html",
   "display": "standalone",
-  "background_color": "#008136",
-  "theme_color": "#008136",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "icons": [
     {
       "src": "https://drive.google.com/thumbnail?id=1eBPVAmgM5m8PI0m-vOz4A5Msftlnx-7F&sz=s192",
