@@ -85,7 +85,7 @@
   <div class="spinner"></div>
 </div>
   
-  <iframe src="https://script.google.com/macros/s/AKfycbwhY0VGxodcDgYLBqEiWUtlqEO8-SkebA9VvkRh_bIjtbNDO3WLbZod40A8KSQVOuBa/exec"></iframe>
+  <iframe id="main-frame" src="https://script.google.com/macros/s/AKfycbwhY0VGxodcDgYLBqEiWUtlqEO8-SkebA9VvkRh_bIjtbNDO3WLbZod40A8KSQVOuBa/exec" onload="hideSplash()"></iframe>
 
   <div id="pwaOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
     <div style="font-size: 4rem; margin-bottom: 20px;">📲</div>
@@ -112,41 +112,56 @@
   </div>
 
   <script>
-    let deferredPrompt;
+    
+  let deferredPrompt;
 
-    // --- 1. REGISTER SERVICE WORKER ---
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
-      });
-    }
-
-    // --- 2. DETECT IF ALREADY INSTALLED ---
-    function checkPWAStatus() {
-      const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      const overlay = document.getElementById('pwaOverlay');
-      // Only show overlay if NOT in PWA mode
-      if (overlay) overlay.style.display = isPWA ? 'none' : 'flex';
-    }
-    window.addEventListener('load', checkPWAStatus);
-
-    // --- 3. ANDROID INSTALL LOGIC ---
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      // Show the small bottom banner if we have the prompt
-      document.getElementById('installBanner').style.display = 'block';
+  // --- 1. REGISTER SERVICE WORKER ---
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js');
     });
+  }
 
-    async function handleInstallClick() {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        document.getElementById('installBanner').style.display = 'none';
-      }
-      deferredPrompt = null;
+  // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
+  // This is the "Magic" function that handles the timing
+  function hideSplash() {
+    const splash = document.getElementById('splash-screen');
+    const overlay = document.getElementById('pwaOverlay');
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+    // 1. Fade out the white splash screen
+    setTimeout(() => {
+      splash.style.opacity = '0';
+      
+      setTimeout(() => {
+        splash.style.display = 'none';
+        
+        // 2. Only show the green overlay IF they aren't using the app yet
+        if (overlay && !isPWA) {
+          overlay.style.display = 'flex';
+        }
+      }, 500); // Wait for fade transition to finish
+    }, 1500); // Show logo for at least 1.5 seconds
+  }
+
+  // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // This shows the small white button at the bottom for Android
+    const banner = document.getElementById('installBanner');
+    if (banner) banner.style.display = 'block';
+  });
+
+  async function handleInstallClick() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      document.getElementById('installBanner').style.display = 'none';
     }
+    deferredPrompt = null;
+  }
 
     function hideSplash() {
   const splash = document.getElementById('splash-screen');
