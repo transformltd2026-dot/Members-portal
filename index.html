@@ -85,7 +85,11 @@
   <div class="spinner"></div>
 </div>
   
-  <iframe id="main-frame" src="https://script.google.com/macros/s/AKfycbwhY0VGxodcDgYLBqEiWUtlqEO8-SkebA9VvkRh_bIjtbNDO3WLbZod40A8KSQVOuBa/exec" onload="hideSplash()"></iframe>
+  <iframe id="main-frame" 
+        src="https://script.google.com/macros/s/AKfycbwhY0VGxodcDgYLBqEiWUtlqEO8-SkebA9VvkRh_bIjtbNDO3WLbZod40A8KSQVOuBa/exec" 
+        style="display:none;" 
+        onload="hideSplash()">
+</iframe>
 
   <div id="pwaOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px;">
     <div style="font-size: 4rem; margin-bottom: 20px;">📲</div>
@@ -124,25 +128,38 @@
 
   // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
   // This is the "Magic" function that handles the timing
+
   function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
+    const iframe = document.getElementById('main-frame');
+    
+    // Check if the user is in the installed App
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    // 1. Fade out the white splash screen
     setTimeout(() => {
+      // 1. Hide the white splash logo
       splash.style.opacity = '0';
       
       setTimeout(() => {
         splash.style.display = 'none';
-        
-        // 2. Only show the green overlay IF they aren't using the app yet
-        if (overlay && !isPWA) {
+
+        if (isPWA) {
+          // USER IS IN THE APP: Show the login portal
+          iframe.style.display = 'block';
+          overlay.style.display = 'none';
+        } else {
+          // USER IS ON A BROWSER: Keep portal hidden and show green lock
+          iframe.style.display = 'none';
           overlay.style.display = 'flex';
+          
+          // Remove the "Continue to Web" button if you had one 
+          // to ensure they CANNOT bypass this screen.
         }
-      }, 500); // Wait for fade transition to finish
-    }, 1500); // Show logo for at least 1.5 seconds
+      }, 500);
+    }, 1500);
   }
+
 
   // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
