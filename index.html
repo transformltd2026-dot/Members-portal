@@ -75,50 +75,9 @@
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-
-    /* Tutorial Button Styling */
-.tutorial-btn {
-  display: none; /* Add this line to hide it at the very start */
-  position: fixed;
-  top: 15px;
-  right: 15px;
-  z-index: 100001; /* Higher than the splash and overlay */
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #008136;
-  border: 2px solid #008136;
-  border-radius: 50px;
-  padding: 8px 15px;
-  font-size: 0.85rem;
-  font-weight: 700;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  transition: transform 0.2s, background-color 0.2s;
-}
-
-.tutorial-btn:hover {
-  background-color: #008136;
-  color: white;
-  transform: scale(1.05);
-}
-
-.video-icon {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
   </style>
 </head>
 <body>
-
-  <a href="https://www.youtube.com/watch?v=YOUR_VIDEO_ID" target="_blank" class="tutorial-btn">
-  <svg class="video-icon" viewBox="0 0 24 24">
-    <path d="M8 5v14l11-7z"/>
-  </svg>
-  Watch How to use the TMC app
-</a>
 
   <div id="splash-screen">
   <img src="https://drive.google.com/thumbnail?id=1l-7TVMBSBafc7uqqPTjEyiVpIiJknuOw&sz=s400" class="splash-logo" alt="TMC Logo">
@@ -158,7 +117,7 @@
   
   <div id="installBanner" style="display:none; position:fixed; bottom:20px; left:20px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
     <div class="d-flex align-items-center gap-3">
-      <img src="https://drive.google.com/thumbnail?id=1l-7TVMBSBafc7uqqPTjEyiVpIiJknuOw&sz=s100" style="width:50px; border-radius:12px;">
+      <img src="https://drive.google.com/thumbnail?id=1eBPVAmgM5m8PI0m-vOz4A5Msftlnx-7F&sz=s100" style="width:50px; border-radius:12px;">
       <div style="flex-grow:1;">
         <h6 class="fw-bold mb-0" style="color:#333;">TMC Portal</h6>
         <small class="text-muted">Install for a better experience</small>
@@ -181,37 +140,37 @@
   // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
   // This is the "Magic" function that handles the timing
 
-function hideSplash() {
-  const splash = document.getElementById('splash-screen');
-  const overlay = document.getElementById('pwaOverlay');
-  const iframe = document.getElementById('main-frame');
-  const tutorialBtn = document.querySelector('.tutorial-btn');
-  const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-  // 1. Hide the button immediately while splash is visible
-  if (tutorialBtn) tutorialBtn.style.display = 'none';
-
-  // 2. Wait 1.5 seconds, then start the exit
-  setTimeout(() => {
-    splash.style.opacity = '0'; // Fade out
+  function hideSplash() {
+    const splash = document.getElementById('splash-screen');
+    const overlay = document.getElementById('pwaOverlay');
+    const iframe = document.getElementById('main-frame');
     
-    setTimeout(() => {
-      splash.style.display = 'none'; // Remove from view
-      
-      // 3. Show the tutorial button ONLY now
-      if (tutorialBtn) tutorialBtn.style.display = 'flex';
+    // Check if the user is in the installed App
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-      // 4. Show the correct screen
-      if (isPWA) {
-        iframe.style.display = 'block';
-        overlay.style.display = 'none';
-      } else {
-        iframe.style.display = 'none';
-        overlay.style.display = 'flex';
-      }
-    }, 500); // Time for the fade animation
-  }, 1500); // Time the logo stays on screen
-}
+    setTimeout(() => {
+      // 1. Hide the white splash logo
+      splash.style.opacity = '0';
+      
+      setTimeout(() => {
+        splash.style.display = 'none';
+
+        if (isPWA) {
+          // USER IS IN THE APP: Show the login portal
+          iframe.style.display = 'block';
+          overlay.style.display = 'none';
+        } else {
+          // USER IS ON A BROWSER: Keep portal hidden and show green lock
+          iframe.style.display = 'none';
+          overlay.style.display = 'flex';
+          
+          // Remove the "Continue to Web" button if you had one 
+          // to ensure they CANNOT bypass this screen.
+        }
+      }, 500);
+    }, 1500);
+  }
+
 
   // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
