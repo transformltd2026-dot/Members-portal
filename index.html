@@ -78,6 +78,7 @@
 
     /* Tutorial Button Styling */
 .tutorial-btn {
+  display: none; /* Add this line to hide it at the very start */
   position: fixed;
   top: 15px;
   right: 15px;
@@ -180,60 +181,37 @@
   // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
   // This is the "Magic" function that handles the timing
 
-  function hideSplash() {
-    const splash = document.getElementById('splash-screen');
-    const overlay = document.getElementById('pwaOverlay');
-    const iframe = document.getElementById('main-frame');
+function hideSplash() {
+  const splash = document.getElementById('splash-screen');
+  const overlay = document.getElementById('pwaOverlay');
+  const iframe = document.getElementById('main-frame');
+  const tutorialBtn = document.querySelector('.tutorial-btn');
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    // Hide the button initially
-  tutorialBtn.style.display = 'none';
+  // 1. Hide the button immediately while splash is visible
+  if (tutorialBtn) tutorialBtn.style.display = 'none';
 
-  const startExit = () => {
-    setTimeout(() => {
-      splash.style.opacity = '0';
-      setTimeout(() => {
-        splash.style.display = 'none';
-        
-        // Show the button ONLY after the splash screen is gone
-        tutorialBtn.style.display = 'flex';
-
-        if (isPWA) {
-          iframe.style.display = 'block';
-          overlay.style.display = 'none';
-        } else {
-          iframe.style.display = 'none';
-          overlay.style.display = 'flex';
-        }
-      }, 500);
-    }, 1000);
-  };
+  // 2. Wait 1.5 seconds, then start the exit
+  setTimeout(() => {
+    splash.style.opacity = '0'; // Fade out
     
-    // Check if the user is in the installed App
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
     setTimeout(() => {
-      // 1. Hide the white splash logo
-      splash.style.opacity = '0';
+      splash.style.display = 'none'; // Remove from view
       
-      setTimeout(() => {
-        splash.style.display = 'none';
+      // 3. Show the tutorial button ONLY now
+      if (tutorialBtn) tutorialBtn.style.display = 'flex';
 
-        if (isPWA) {
-          // USER IS IN THE APP: Show the login portal
-          iframe.style.display = 'block';
-          overlay.style.display = 'none';
-        } else {
-          // USER IS ON A BROWSER: Keep portal hidden and show green lock
-          iframe.style.display = 'none';
-          overlay.style.display = 'flex';
-          
-          // Remove the "Continue to Web" button if you had one 
-          // to ensure they CANNOT bypass this screen.
-        }
-      }, 500);
-    }, 1500);
-  }
-
+      // 4. Show the correct screen
+      if (isPWA) {
+        iframe.style.display = 'block';
+        overlay.style.display = 'none';
+      } else {
+        iframe.style.display = 'none';
+        overlay.style.display = 'flex';
+      }
+    }, 500); // Time for the fade animation
+  }, 1500); // Time the logo stays on screen
+}
 
   // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
