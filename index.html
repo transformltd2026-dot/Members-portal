@@ -139,37 +139,42 @@
   // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
   // This is the "Magic" function that handles the timing
 
-  function hideSplash() {
+ function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
     
-    // Check if the user is in the installed App
+    // Find the logo image inside the splash div
+    const logoImg = splash.querySelector('img');
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
-    setTimeout(() => {
-      // 1. Hide the white splash logo
-      splash.style.opacity = '0';
-      
+    // This internal function runs the actual "hide" animation
+    const startExit = () => {
       setTimeout(() => {
-        splash.style.display = 'none';
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          splash.style.display = 'none';
+          if (isPWA) {
+            iframe.style.display = 'block';
+            overlay.style.display = 'none';
+          } else {
+            iframe.style.display = 'none';
+            overlay.style.display = 'flex';
+          }
+        }, 500);
+      }, 1000); // Gives the user 1 second to see the logo once it loads
+    };
 
-        if (isPWA) {
-          // USER IS IN THE APP: Show the login portal
-          iframe.style.display = 'block';
-          overlay.style.display = 'none';
-        } else {
-          // USER IS ON A BROWSER: Keep portal hidden and show green lock
-          iframe.style.display = 'none';
-          overlay.style.display = 'flex';
-          
-          // Remove the "Continue to Web" button if you had one 
-          // to ensure they CANNOT bypass this screen.
-        }
-      }, 500);
-    }, 1500);
+    // LOGIC: If the image is already in cache, start. 
+    // If not (after cache clear), wait for the 'load' event.
+    if (logoImg.complete) {
+      startExit();
+    } else {
+      logoImg.onload = startExit;
+      // Fail-safe: If the logo fails to load (no signal), move on after 4 seconds
+      setTimeout(startExit, 4000);
+    }
   }
-
 
   // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
