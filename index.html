@@ -179,16 +179,18 @@
       
       setTimeout(() => {
         splash.style.display = 'none';
-        if (tutorialBtn) tutorialBtn.style.display = 'flex';
 
         if (isPWA) {
           // USER IS IN THE APP: Show the login portal
           iframe.style.display = 'block';
           overlay.style.display = 'none';
+          if (tutorialBtn) tutorialBtn.style.display = 'none';
+          
         } else {
           // USER IS ON A BROWSER: Keep portal hidden and show green lock
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
+          if (tutorialBtn) tutorialBtn.style.display = 'flex';
           
           // Remove the "Continue to Web" button if you had one 
           // to ensure they CANNOT bypass this screen.
