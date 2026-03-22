@@ -161,6 +161,36 @@
     });
   }
 
+    let historyCount = 0; // Starts at 0 (Dashboard)
+
+// 1. Listen for navigation messages from INSIDE the Google Script
+    // Prime the history so the first 'back' press is caught
+window.history.replaceState({ page: 0 }, "");
+window.addEventListener('message', function(event) {
+  if (event.data === 'pageNavigated') {
+    historyCount++; // User moved to a new page
+    window.history.pushState({ page: historyCount }, ""); 
+  }
+});
+
+// 2. Handle the Hardware Back Button
+window.onpopstate = function(event) {
+  const iframe = document.getElementById('main-frame');
+  
+  if (historyCount > 0) {
+    // If we are NOT on the dashboard, go back inside the iframe
+    iframe.contentWindow.postMessage('goBack', '*');
+    historyCount--; 
+    
+    // Prevent the app from closing by pushing a state back in
+    window.history.pushState({ page: historyCount }, "");
+  } else {
+    // If historyCount is 0, we are on the Dashboard. 
+    // Do nothing, and the next 'Back' press will close the app naturally.
+    console.log("On Dashboard: Back button will now exit app.");
+  }
+};
+
   // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
   // This is the "Magic" function that handles the timing
 
