@@ -161,7 +161,7 @@
   }
 
   function rechargeHistory() {
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       window.history.pushState({ pwa: true }, "");
     }
   }
@@ -174,19 +174,8 @@
     }
   }
 
-  // METHOD 1: popstate (standard)
   window.addEventListener('popstate', function(event) {
-    console.log("popstate fired");
-    sendGoBack();
     rechargeHistory();
-  });
-
-  // METHOD 2: pageshow (catches back on some Android browsers)
-  window.addEventListener('pageshow', function(event) {
-    if (event.persisted) {
-      console.log("pageshow persisted fired");
-      sendGoBack();
-    }
   });
 
   window.addEventListener('message', function(event) {
@@ -194,7 +183,7 @@
       rechargeHistory();
     }
   });
-
+    
  function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
