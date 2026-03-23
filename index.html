@@ -149,12 +149,11 @@
       <button id="installBtn" onclick="handleInstallClick()" class="btn btn-success btn-sm fw-bold" style="border-radius:10px; padding:8px 15px;">INSTALL</button>
     </div>
   </div>
-
-  <script>
-    
+  
 <script>
   let deferredPrompt;
-  let historyCount = 0; // This tracks how many "Backs" we have left
+  let historyCount = 0; 
+  let historyInitialized = false;
 
   // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
@@ -193,35 +192,33 @@
   };
 
   // --- 3. HIDE SPLASH & INITIALIZE HISTORY ---
-  function hideSplash() {
+ function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
-    const tutorialBtn = document.querySelector('.tutorial-btn');
-    
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     setTimeout(() => {
       splash.style.opacity = '0';
-      
       setTimeout(() => {
         splash.style.display = 'none';
-
         if (isPWA) {
           iframe.style.display = 'block';
           overlay.style.display = 'none';
-          if (tutorialBtn) tutorialBtn.style.display = 'none';
           
-          // THE SAFETY NET: Pre-load 10 "Back" steps so the app doesn't close
-          for (let i = 1; i <= 10; i++) {
-            window.history.pushState({ page: i }, "");
-          }
-          historyCount = 10; 
-          
+          // ACTIVATES THE SAFETY NET ON FIRST TOUCH
+          const startHistory = () => {
+            if (historyInitialized) return;
+            for (let i = 1; i <= 10; i++) { window.history.pushState({ page: i }, ""); }
+            historyCount = 10;
+            historyInitialized = true;
+          };
+          window.addEventListener('touchstart', startHistory, { once: true });
+          window.addEventListener('click', startHistory, { once: true });
+
         } else {
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
-          if (tutorialBtn) tutorialBtn.style.display = 'flex';
         }
       }, 500);
     }, 1500);
