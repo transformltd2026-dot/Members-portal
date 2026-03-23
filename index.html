@@ -152,7 +152,9 @@
 
   <script>
     
+<script>
   let deferredPrompt;
+  let historyCount = 0; // This tracks how many "Backs" we have left
 
   // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
@@ -161,105 +163,74 @@
     });
   }
 
- // --- UPDATED BACK BUTTON LOGIC ---
-let historyCount = 0;
-
-// 1. Listen for "New Page" signals from Google
-window.addEventListener('message', function(event) {
-  if (event.data === 'pageNavigated') {
-    // We don't need to do much here if we use the "10 Lives" method, 
-    // but keeping it for debugging is fine.
-    console.log("Google Script moved to a new page.");
-  }
-});
-
-// 2. Handle the Hardware Back Button
-window.onpopstate = function(event) {
-  const iframe = document.getElementById('main-frame');
+  // --- 2. THE BACK BUTTON BRIDGE ---
   
-  // As long as we have "lives" left, send the goBack signal
-  if (historyCount > 0) {
-    // Send signal to Google Script
-    iframe.contentWindow.postMessage('goBack', '*');
-    
-    historyCount--; 
-    
-    // IMPORTANT: Push the state BACK so the user stays in the app
-    window.history.pushState({ page: historyCount }, "");
-  } else {
-    // This only triggers if they press back 10+ times on the dashboard
-    console.log("User at exit point.");
-  }
-};
+  // Listen for navigation signals from Google (Optional but good for logs)
+  window.addEventListener('message', function(event) {
+    if (event.data === 'pageNavigated') {
+      console.log("Google Script moved to a new page.");
+    }
+  });
 
-// 2. Handle the Hardware Back Button
-window.onpopstate = function(event) {
-  const iframe = document.getElementById('main-frame');
-  
-  // If historyCount is greater than 0, the user is deep in the app
-  if (historyCount > 0) {
-    // ADD THIS ALERT:
-    alert("GitHub: Hardware back detected! Sending 'goBack' to Google Script...");
-    iframe.contentWindow.postMessage('goBack', '*');
-    historyCount--; 
+  // THE MAIN CONTROLLER: Captures the physical Back Button
+  window.onpopstate = function(event) {
+    const iframe = document.getElementById('main-frame');
     
-    // Crucial: Push the state back so the next back-press doesn't exit the app
-    window.history.pushState({ page: historyCount }, "");
-  } else {
-    // We are on the dashboard. Let the next back press close the app.
-    console.log("App will exit on next back press");
-  }
-};
+    if (historyCount > 0) {
+      // DEBUG ALERT: If you see this, GitHub is doing its job!
+      alert("GitHub: Back button detected! Signal sent to Google.");
+      
+      // Send the signal into the Google Iframe
+      iframe.contentWindow.postMessage('goBack', '*');
+      
+      historyCount--; 
+      
+      // IMPORTANT: Push the state back so the NEXT back press doesn't exit the app
+      window.history.pushState({ page: historyCount }, "");
+    } else {
+      console.log("Dashboard level reached. App will exit on next back.");
+    }
+  };
 
-  // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
-  // This is the "Magic" function that handles the timing
-
+  // --- 3. HIDE SPLASH & INITIALIZE HISTORY ---
   function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
     const tutorialBtn = document.querySelector('.tutorial-btn');
     
-    // Check if the user is in the installed App
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     setTimeout(() => {
-      // 1. Hide the white splash logo
       splash.style.opacity = '0';
       
       setTimeout(() => {
         splash.style.display = 'none';
 
         if (isPWA) {
-          // USER IS IN THE APP: Show the login portal
           iframe.style.display = 'block';
           overlay.style.display = 'none';
           if (tutorialBtn) tutorialBtn.style.display = 'none';
-          // THE SAFETY NET: Pre-load 10 "Back" steps
-    for (let i = 1; i <= 10; i++) {
-      window.history.pushState({ page: i }, "");
-    }
-    historyCount = 10; // Tell GitHub we have 10 "lives"
+          
+          // THE SAFETY NET: Pre-load 10 "Back" steps so the app doesn't close
+          for (let i = 1; i <= 10; i++) {
+            window.history.pushState({ page: i }, "");
+          }
+          historyCount = 10; 
           
         } else {
-          // USER IS ON A BROWSER: Keep portal hidden and show green lock
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
           if (tutorialBtn) tutorialBtn.style.display = 'flex';
-          
-          // Remove the "Continue to Web" button if you had one 
-          // to ensure they CANNOT bypass this screen.
         }
       }, 500);
     }, 1500);
   }
 
-
-  // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
+  // --- 4. INSTALL BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // This shows the small white button at the bottom for Android
     const banner = document.getElementById('installBanner');
     if (banner) banner.style.display = 'block';
   });
@@ -273,7 +244,6 @@ window.onpopstate = function(event) {
     }
     deferredPrompt = null;
   }
-    
-  </script>
+</script>
 </body>
 </html>
