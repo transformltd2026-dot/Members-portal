@@ -181,6 +181,8 @@ window.onpopstate = function(event) {
   
   // If historyCount is greater than 0, the user is deep in the app
   if (historyCount > 0) {
+    // ADD THIS ALERT:
+    alert("GitHub: Hardware back detected! Sending 'goBack' to Google Script...");
     iframe.contentWindow.postMessage('goBack', '*');
     historyCount--; 
     
