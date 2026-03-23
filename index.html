@@ -149,85 +149,62 @@
       <button id="installBtn" onclick="handleInstallClick()" class="btn btn-success btn-sm fw-bold" style="border-radius:10px; padding:8px 15px;">INSTALL</button>
     </div>
   </div>
-  
-<script>
-  let deferredPrompt;
-  let historyInitialized = false;
 
+  <script>
+    
+  let deferredPrompt;
+
+  // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js');
     });
   }
 
-  // Always maintain a deep enough stack
-  function rechargeHistory() {
-    // Push 3 states every time — ensures we never hit 0
-    for (let i = 0; i < 3; i++) {
-      window.history.pushState({ pwa: true }, "");
-    }
-  }
-
-  // Listen for navigation signals from Google Script
-  window.addEventListener('message', function(event) {
-    if (event.data === 'pageNavigated') {
-      // Every time the inner app changes page, recharge the stack
-      rechargeHistory();
-      console.log("Page navigated — history recharged.");
-    }
-  });
-
-  // Capture the physical back button
-  window.onpopstate = function(event) {
-    const iframe = document.getElementById('main-frame');
-
-    // Tell the inner app to go back
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage('goBack', '*');
-    }
-
-    // Immediately recharge so the next back press works too
-    rechargeHistory();
-
-    console.log("Back press captured.");
-  };
+  // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
+  // This is the "Magic" function that handles the timing
 
   function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches 
-               || window.navigator.standalone;
+    const tutorialBtn = document.querySelector('.tutorial-btn');
+    
+    // Check if the user is in the installed App
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
 
     setTimeout(() => {
+      // 1. Hide the white splash logo
       splash.style.opacity = '0';
+      
       setTimeout(() => {
         splash.style.display = 'none';
 
         if (isPWA) {
+          // USER IS IN THE APP: Show the login portal
           iframe.style.display = 'block';
           overlay.style.display = 'none';
-
-          // Initialize history on first interaction
-          const startHistory = () => {
-            if (historyInitialized) return;
-            rechargeHistory();
-            historyInitialized = true;
-          };
-          window.addEventListener('touchstart', startHistory, { once: true });
-          window.addEventListener('click', startHistory, { once: true });
-
+          if (tutorialBtn) tutorialBtn.style.display = 'none';
+          
         } else {
+          // USER IS ON A BROWSER: Keep portal hidden and show green lock
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
+          if (tutorialBtn) tutorialBtn.style.display = 'flex';
+          
+          // Remove the "Continue to Web" button if you had one 
+          // to ensure they CANNOT bypass this screen.
         }
       }, 500);
     }, 1500);
   }
 
+
+  // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
+    // This shows the small white button at the bottom for Android
     const banner = document.getElementById('installBanner');
     if (banner) banner.style.display = 'block';
   });
@@ -241,6 +218,7 @@
     }
     deferredPrompt = null;
   }
-</script>
+    
+  </script>
 </body>
 </html>
