@@ -157,6 +157,8 @@
   // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
+      // DEBUG ALERT: Does GitHub hear Google?
+      alert("GitHub heard: " + event.data);
       navigator.serviceWorker.register('sw.js');
     });
   }
