@@ -152,7 +152,18 @@
 
   <script>
     
-  let deferredPrompt;
+let deferredPrompt;
+
+  // Block hardware back button
+  for (let i = 0; i < 30; i++) {
+    window.history.pushState({ pwa: true }, "");
+  }
+
+  window.addEventListener('popstate', function(event) {
+    for (let i = 0; i < 5; i++) {
+      window.history.pushState({ pwa: true }, "");
+    }
+  });
 
   // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
