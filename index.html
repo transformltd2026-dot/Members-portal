@@ -161,19 +161,36 @@
     });
   }
 
-    let historyCount = 0; // Starts at 0 (Dashboard)
+ // --- UPDATED BACK BUTTON LOGIC ---
+let historyCount = 0;
 
-// 1. Listen for navigation messages from INSIDE the Google Script
-    
-// Prime the history twice so there is always a "Back" layer available
-window.history.replaceState({ page: 0 }, "");
-window.history.pushState({ page: 0 }, "");
+// 1. Listen for "New Page" signals from Google
 window.addEventListener('message', function(event) {
   if (event.data === 'pageNavigated') {
-    historyCount++; // User moved to a new page
-    window.history.pushState({ page: historyCount }, ""); 
+    // We don't need to do much here if we use the "10 Lives" method, 
+    // but keeping it for debugging is fine.
+    console.log("Google Script moved to a new page.");
   }
 });
+
+// 2. Handle the Hardware Back Button
+window.onpopstate = function(event) {
+  const iframe = document.getElementById('main-frame');
+  
+  // As long as we have "lives" left, send the goBack signal
+  if (historyCount > 0) {
+    // Send signal to Google Script
+    iframe.contentWindow.postMessage('goBack', '*');
+    
+    historyCount--; 
+    
+    // IMPORTANT: Push the state BACK so the user stays in the app
+    window.history.pushState({ page: historyCount }, "");
+  } else {
+    // This only triggers if they press back 10+ times on the dashboard
+    console.log("User at exit point.");
+  }
+};
 
 // 2. Handle the Hardware Back Button
 window.onpopstate = function(event) {
