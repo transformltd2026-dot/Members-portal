@@ -164,8 +164,10 @@
     let historyCount = 0; // Starts at 0 (Dashboard)
 
 // 1. Listen for navigation messages from INSIDE the Google Script
-    // Prime the history so the first 'back' press is caught
+    
+// Prime the history twice so there is always a "Back" layer available
 window.history.replaceState({ page: 0 }, "");
+window.history.pushState({ page: 0 }, "");
 window.addEventListener('message', function(event) {
   if (event.data === 'pageNavigated') {
     historyCount++; // User moved to a new page
@@ -177,17 +179,16 @@ window.addEventListener('message', function(event) {
 window.onpopstate = function(event) {
   const iframe = document.getElementById('main-frame');
   
+  // If historyCount is greater than 0, the user is deep in the app
   if (historyCount > 0) {
-    // If we are NOT on the dashboard, go back inside the iframe
     iframe.contentWindow.postMessage('goBack', '*');
     historyCount--; 
     
-    // Prevent the app from closing by pushing a state back in
+    // Crucial: Push the state back so the next back-press doesn't exit the app
     window.history.pushState({ page: historyCount }, "");
   } else {
-    // If historyCount is 0, we are on the Dashboard. 
-    // Do nothing, and the next 'Back' press will close the app naturally.
-    console.log("On Dashboard: Back button will now exit app.");
+    // We are on the dashboard. Let the next back press close the app.
+    console.log("App will exit on next back press");
   }
 };
 
