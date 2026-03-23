@@ -166,21 +166,36 @@
     }
   }
 
+  function sendGoBack() {
+    const iframe = document.getElementById('main-frame');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage('goBack', '*');
+      console.log("goBack sent");
+    }
+  }
+
+  // METHOD 1: popstate (standard)
+  window.addEventListener('popstate', function(event) {
+    console.log("popstate fired");
+    sendGoBack();
+    rechargeHistory();
+  });
+
+  // METHOD 2: pageshow (catches back on some Android browsers)
+  window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+      console.log("pageshow persisted fired");
+      sendGoBack();
+    }
+  });
+
   window.addEventListener('message', function(event) {
     if (event.data === 'pageNavigated') {
       rechargeHistory();
     }
   });
 
-  window.onpopstate = function(event) {
-    const iframe = document.getElementById('main-frame');
-    if (iframe && iframe.contentWindow) {
-      iframe.contentWindow.postMessage('goBack', '*');
-    }
-    rechargeHistory();
-  };
-
-  function hideSplash() {
+ function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
@@ -194,13 +209,13 @@
         if (isPWA) {
           iframe.style.display = 'block';
           overlay.style.display = 'none';
-          const startHistory = () => {
-            if (historyInitialized) return;
+
+          // Initialize immediately — no waiting for touch
+          if (!historyInitialized) {
             rechargeHistory();
             historyInitialized = true;
-          };
-          window.addEventListener('touchstart', startHistory, { once: true });
-          window.addEventListener('click', startHistory, { once: true });
+          }
+
         } else {
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
