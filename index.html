@@ -157,8 +157,6 @@
   // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      // DEBUG ALERT: Does GitHub hear Google?
-      alert("GitHub heard: " + event.data);
       navigator.serviceWorker.register('sw.js');
     });
   }
@@ -220,6 +218,11 @@ window.onpopstate = function(event) {
           iframe.style.display = 'block';
           overlay.style.display = 'none';
           if (tutorialBtn) tutorialBtn.style.display = 'none';
+          // THE SAFETY NET: Pre-load 10 "Back" steps
+    for (let i = 1; i <= 10; i++) {
+      window.history.pushState({ page: i }, "");
+    }
+    historyCount = 10; // Tell GitHub we have 10 "lives"
           
         } else {
           // USER IS ON A BROWSER: Keep portal hidden and show green lock
