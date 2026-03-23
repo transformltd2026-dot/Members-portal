@@ -152,61 +152,66 @@
   
 <script>
   let deferredPrompt;
-  let historyCount = 0; 
   let historyInitialized = false;
 
-  // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js');
     });
   }
 
-  // --- 2. THE BACK BUTTON BRIDGE ---
-  
-  // Listen for navigation signals from Google (Optional but good for logs)
+  // Always maintain a deep enough stack
+  function rechargeHistory() {
+    // Push 3 states every time — ensures we never hit 0
+    for (let i = 0; i < 3; i++) {
+      window.history.pushState({ pwa: true }, "");
+    }
+  }
+
+  // Listen for navigation signals from Google Script
   window.addEventListener('message', function(event) {
     if (event.data === 'pageNavigated') {
-      console.log("Google Script moved to a new page.");
+      // Every time the inner app changes page, recharge the stack
+      rechargeHistory();
+      console.log("Page navigated — history recharged.");
     }
   });
 
-  // THE MAIN CONTROLLER: Captures the physical Back Button
+  // Capture the physical back button
   window.onpopstate = function(event) {
-  const iframe = document.getElementById('main-frame');
-  
-  // 1. Send the signal to Google Script
-  // This tells the internal app "The user wants to go back"
-  iframe.contentWindow.postMessage('goBack', '*');
-  
-  // 2. THE RECHARGE: Immediately push the state back
-  // This prevents the browser from actually going "back" to the previous URL.
-  // It effectively "traps" the user inside the PWA wrapper so your JS can handle the navigation.
-  window.history.pushState(null, "", window.location.href);
-  
-  console.log("Back press captured and recharged.");
-};
+    const iframe = document.getElementById('main-frame');
 
-  // --- 3. HIDE SPLASH & INITIALIZE HISTORY ---
- function hideSplash() {
+    // Tell the inner app to go back
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage('goBack', '*');
+    }
+
+    // Immediately recharge so the next back press works too
+    rechargeHistory();
+
+    console.log("Back press captured.");
+  };
+
+  function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches 
+               || window.navigator.standalone;
 
     setTimeout(() => {
       splash.style.opacity = '0';
       setTimeout(() => {
         splash.style.display = 'none';
+
         if (isPWA) {
           iframe.style.display = 'block';
           overlay.style.display = 'none';
-          
-          // ACTIVATES THE SAFETY NET ON FIRST TOUCH
+
+          // Initialize history on first interaction
           const startHistory = () => {
             if (historyInitialized) return;
-            for (let i = 1; i <= 10; i++) { window.history.pushState({ page: i }, ""); }
-            historyCount = 10;
+            rechargeHistory();
             historyInitialized = true;
           };
           window.addEventListener('touchstart', startHistory, { once: true });
@@ -220,7 +225,6 @@
     }, 1500);
   }
 
-  // --- 4. INSTALL BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
