@@ -151,60 +151,67 @@
   </div>
 
   <script>
-    
   let deferredPrompt;
+  let historyInitialized = false;
 
-  // --- 1. REGISTER SERVICE WORKER ---
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('sw.js');
     });
   }
 
-  // --- 2. HIDE SPLASH & CHECK INSTALL STATUS ---
-  // This is the "Magic" function that handles the timing
+  function rechargeHistory() {
+    for (let i = 0; i < 3; i++) {
+      window.history.pushState({ pwa: true }, "");
+    }
+  }
+
+  window.addEventListener('message', function(event) {
+    if (event.data === 'pageNavigated') {
+      rechargeHistory();
+    }
+  });
+
+  window.onpopstate = function(event) {
+    const iframe = document.getElementById('main-frame');
+    if (iframe && iframe.contentWindow) {
+      iframe.contentWindow.postMessage('goBack', '*');
+    }
+    rechargeHistory();
+  };
 
   function hideSplash() {
     const splash = document.getElementById('splash-screen');
     const overlay = document.getElementById('pwaOverlay');
     const iframe = document.getElementById('main-frame');
-    const tutorialBtn = document.querySelector('.tutorial-btn');
-    
-    // Check if the user is in the installed App
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches 
+               || window.navigator.standalone;
 
     setTimeout(() => {
-      // 1. Hide the white splash logo
       splash.style.opacity = '0';
-      
       setTimeout(() => {
         splash.style.display = 'none';
-
         if (isPWA) {
-          // USER IS IN THE APP: Show the login portal
           iframe.style.display = 'block';
           overlay.style.display = 'none';
-          if (tutorialBtn) tutorialBtn.style.display = 'none';
-          
+          const startHistory = () => {
+            if (historyInitialized) return;
+            rechargeHistory();
+            historyInitialized = true;
+          };
+          window.addEventListener('touchstart', startHistory, { once: true });
+          window.addEventListener('click', startHistory, { once: true });
         } else {
-          // USER IS ON A BROWSER: Keep portal hidden and show green lock
           iframe.style.display = 'none';
           overlay.style.display = 'flex';
-          if (tutorialBtn) tutorialBtn.style.display = 'flex';
-          
-          // Remove the "Continue to Web" button if you had one 
-          // to ensure they CANNOT bypass this screen.
         }
       }, 500);
     }, 1500);
   }
 
-
-  // --- 3. ANDROID "INSTALL" BANNER LOGIC ---
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
-    // This shows the small white button at the bottom for Android
     const banner = document.getElementById('installBanner');
     if (banner) banner.style.display = 'block';
   });
@@ -218,7 +225,6 @@
     }
     deferredPrompt = null;
   }
-    
-  </script>
+</script>
 </body>
 </html>
