@@ -173,23 +173,19 @@
 
   // THE MAIN CONTROLLER: Captures the physical Back Button
   window.onpopstate = function(event) {
-    const iframe = document.getElementById('main-frame');
-    
-    if (historyCount > 0) {
-      // DEBUG ALERT: If you see this, GitHub is doing its job!
-      alert("GitHub: Back button detected! Signal sent to Google.");
-      
-      // Send the signal into the Google Iframe
-      iframe.contentWindow.postMessage('goBack', '*');
-      
-      historyCount--; 
-      
-      // IMPORTANT: Push the state back so the NEXT back press doesn't exit the app
-      window.history.pushState({ page: historyCount }, "");
-    } else {
-      console.log("Dashboard level reached. App will exit on next back.");
-    }
-  };
+  const iframe = document.getElementById('main-frame');
+  
+  // 1. Send the signal to Google Script
+  // This tells the internal app "The user wants to go back"
+  iframe.contentWindow.postMessage('goBack', '*');
+  
+  // 2. THE RECHARGE: Immediately push the state back
+  // This prevents the browser from actually going "back" to the previous URL.
+  // It effectively "traps" the user inside the PWA wrapper so your JS can handle the navigation.
+  window.history.pushState(null, "", window.location.href);
+  
+  console.log("Back press captured and recharged.");
+};
 
   // --- 3. HIDE SPLASH & INITIALIZE HISTORY ---
  function hideSplash() {
